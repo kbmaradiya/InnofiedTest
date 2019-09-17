@@ -13,16 +13,10 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
-public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-    private static final int ITEM = 0;
-    private static final int LOADING = 1;
-
+public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     private List<User.Datum> users;
     private Context context;
-
-    private boolean isLoadingAdded = false;
 
     public UserAdapter(Context context, List<User.Datum> users) {
         this.context = context;
@@ -31,42 +25,23 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        RecyclerView.ViewHolder viewHolder = null;
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+
         LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-        switch (i) {
-            case ITEM:
-                View item = inflater.inflate(R.layout.item_list, viewGroup, false);
-                viewHolder = new LoadingVH(item);
-                break;
-            case LOADING:
-                View loading = inflater.inflate(R.layout.item_progress, viewGroup, false);
-                viewHolder = new LoadingVH(loading);
-                break;
-        }
-        return viewHolder;
+
+        View item = inflater.inflate(R.layout.item_list, viewGroup, false);
+
+        return new ViewHolder(item);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
+        viewHolder.txtName.setText(users.get(i).getFirstName() + " " + users.get(i).getLastName());
+        viewHolder.txtEmail.setText(users.get(i).getEmail());
 
-
-        switch (getItemViewType(i)) {
-            case ITEM:
-                UserVH userVH = (UserVH) viewHolder;
-
-                userVH.txtName.setText(users.get(i).getFirstName() + " " + users.get(i).getLastName());
-                userVH.txtEmail.setText(users.get(i).getEmail());
-
-                Glide.with(context).load(users.get(i).getAvatar())
-                        .placeholder(R.drawable.ic_launcher_background)
-                        .into(userVH.imgProfile);
-
-                break;
-            case LOADING:
-//                Do nothing
-                break;
-        }
+        Glide.with(context).load(users.get(i).getAvatar())
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(viewHolder.imgProfile);
     }
 
     @Override
@@ -74,17 +49,13 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return users == null ? 0 : users.size();
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return (position == users.size() - 1 && isLoadingAdded) ? LOADING : ITEM;
-    }
 
-    protected class UserVH extends RecyclerView.ViewHolder {
+    protected class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView imgProfile;
         private TextView txtName;
         private TextView txtEmail;
 
-        public UserVH(View itemView) {
+        public ViewHolder(View itemView) {
             super(itemView);
 
             imgProfile = itemView.findViewById(R.id.imgProfile);
@@ -94,41 +65,5 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
 
-    protected class LoadingVH extends RecyclerView.ViewHolder {
-
-        public LoadingVH(View itemView) {
-            super(itemView);
-        }
-    }
-
-
-    public void addAll(List<User.Datum> datumList) {
-        for (User.Datum datum: datumList) {
-            add(datum);
-        }
-    }
-
-    public void add(User.Datum datum) {
-        users.add(datum);
-        notifyItemInserted(users.size() - 1);
-    }
-
-
-    public void addLoadingFooter() {
-        isLoadingAdded = true;
-//        add(new Movie());
-    }
-
-    public void removeLoadingFooter() {
-        isLoadingAdded = false;
-
-        int position = users.size() - 1;
-        User.Datum item = users.get(position);
-
-        if (item != null) {
-            users.remove(position);
-            notifyItemRemoved(position);
-        }
-    }
 
 }

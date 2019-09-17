@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.graphics.Movie;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+
+import com.example.myapplication.viewmodel.MainActivityViewModel;
 
 import java.util.List;
 
@@ -22,11 +25,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private UserAdapter adapter;
-    private Retrofit retrofit;
-    private NetworkInterface networkInterface;
 
     private List<User.Datum> datumList;
 
+    private MainActivityViewModel mainActivityViewModel;
 
     RecyclerView rv;
     ProgressBar progressBar;
@@ -50,14 +52,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
 
-        retrofit = NetworkClient.getRetrofit();
-        networkInterface = retrofit.create(NetworkInterface.class);
 
-        adapter = new UserAdapter(this, datumList);
+        mainActivityViewModel= ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         rv.setLayoutManager(linearLayoutManager);
-        rv.setAdapter(adapter);
+
+
+        mainActivityViewModel.getUserMutableLiveData().observe(this, userList->{
+
+
+            if (adapter==null){
+                datumList=userList;
+                adapter = new UserAdapter(this, datumList);
+                rv.setAdapter(adapter);
+            }else {
+                datumList.addAll(userList);
+                adapter.notifyDataSetChanged();
+            }
+        });
 
         rv.addOnScrollListener(new PaginationScrollListener(linearLayoutManager) {
             @Override
@@ -65,13 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 isLoading = true;
                 currentPage += 1;
 
-                // mocking network delay for API call
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        loadNextPage();
-                    }
-                }, 1000);
+                mainActivityViewModel.init();
+
             }
 
             @Override
@@ -90,8 +98,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mainActivityViewModel.init();
 
-        loadFirstPage();
 
     }
 
@@ -101,61 +109,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void loadFirstPage() {
-        Log.d(TAG, "loadFirstPage: ");
-
-
-        Call<User> userCall = networkInterface.getMovies(currentPage, 5);
-
-        userCall.enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if (response != null && response.body().getData().size() > 0) {
-                    TOTAL_PAGES = response.body().getTotalPages();
-                    datumList = response.body().getData();
-                    adapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
-            }
-        });
-
-        progressBar.setVisibility(View.GONE);
-
-
-        if (currentPage <= TOTAL_PAGES) adapter.addLoadingFooter();
-        else isLastPage = true;
-
-    }
-
-    private void loadNextPage() {
-        Log.d(TAG, "loadNextPage: " + currentPage);
-        Call<User> userCall = networkInterface.getMovies(currentPage, 5);
-
-        userCall.enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if (response != null && response.body().getData().size() > 0) {
-                    datumList .addAll(response.body().getData());
-                    adapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
-            }
-        });
-
-        adapter.removeLoadingFooter();
-        isLoading = false;
-
-        if (currentPage != TOTAL_PAGES) adapter.addLoadingFooter();
-        else isLastPage = true;
-    }
 
 
 }
