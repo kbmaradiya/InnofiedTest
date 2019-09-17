@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp">
 
     <ImageView
         android:id="@+id/imgProfile"
@@ -14,7 +16,8 @@
         android:layout_alignTop="@+id/imgProfile"
         android:layout_alignBottom="@+id/imgProfile"
         android:layout_marginLeft="10dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_toRightOf="@+id/imgProfile">
 
         <TextView
             android:id="@+id/txtName"

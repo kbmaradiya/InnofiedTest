@@ -72,6 +72,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mainActivityViewModel.getProgressMutableLiveData().observe(this, progressFlage->{
+            if (progressFlage){
+                progressBar.setVisibility(View.VISIBLE);
+            }else {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+
         rv.addOnScrollListener(new PaginationScrollListener(linearLayoutManager) {
             @Override
             protected void loadMoreItems() {
